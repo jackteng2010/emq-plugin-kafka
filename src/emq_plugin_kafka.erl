@@ -100,21 +100,10 @@ on_session_terminated(ClientId, Username, Reason, _Env) ->
 on_message_publish(Message = #mqtt_message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
-on_message_publish(Message = #mqtt_message{id = MsgId, pktid = PktId, from = {ClientId, Username},
-                     qos = Qos, retain = Retain, dup = Dup, topic = Topic, payload = Payload}, _Env) ->
+on_message_publish(Message, _Env) ->
     io:format("publish ~s~n", [emqttd_message:format(Message)]),
 	
-    Json = mochijson2:encode([
-        {type, <<"published">>},
-        {client_id, ClientId},
-		{username, Username},
-		{topic, Topic},
-		{msg_id, MsgId},
-        {payload, Payload},
-        {qos, QoS},
-        {cluster_node, node()},
-        {ts, emqttd_time:now_to_secs(Timestamp)}
-    ]),
+    Json = mochijson2:encode(Message),
     ekaf:produce_async_batched(<<"tech-iot-device-gateway-2040">>, list_to_binary(Json)),
 	
     {ok, Message}.
