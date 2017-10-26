@@ -46,7 +46,7 @@ load(Env) ->
     emqttd:hook('message.acked', fun ?MODULE:on_message_acked/4, [Env]).
 
 on_client_connected(ConnAck, Client = #mqtt_client{username = Username, client_id = ClientId}, _Env) ->
-    io:format("client ~s/-s connected, connack: ~w~n", [Username, ClientId, ConnAck]),
+    io:format("client ~s/~s connected, connack: ~w~n", [Username, ClientId, ConnAck]),
 	
     Json = mochijson2:encode([
         {type, <<"connected">>},
@@ -54,13 +54,13 @@ on_client_connected(ConnAck, Client = #mqtt_client{username = Username, client_i
 		{username, Username},
         {cluster_node, node()},
         {ts, emqttd_time:now_to_secs()}
-    ]),    
+    ]),
     ekaf:produce_async_batched(<<"tech-iot-device-gateway-2040">>, list_to_binary(Json)),
 	
     {ok, Client}.
 
 on_client_disconnected(Reason, _Client = #mqtt_client{username = Username, client_id = ClientId}, _Env) ->
-    io:format("client ~s/-s disconnected, reason: ~w~n", [Username, ClientId, Reason]),
+    io:format("client ~s/~s disconnected, reason: ~w~n", [Username, ClientId, Reason]),
 	
     Json = mochijson2:encode([
         {type, <<"disconnected">>},
@@ -100,20 +100,16 @@ on_session_terminated(ClientId, Username, Reason, _Env) ->
 on_message_publish(Message = #mqtt_message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
-on_message_publish(Message, _Env) ->
+on_message_publish(Message = #mqtt_message{id = MsgId, pktid = PktId, from = {ClientId, Username},
+                     qos = Qos, retain = Retain, dup = Dup, topic = Topic, payload = Payload}, _Env) ->
     io:format("publish ~s~n", [emqttd_message:format(Message)]),
 	
-    From = Message#mqtt_message.from,
-    Sender =  Message#mqtt_message.sender,
-    Topic = Message#mqtt_message.topic,
-    Payload = Message#mqtt_message.payload, 
-    QoS = Message#mqtt_message.qos,
-    Timestamp = Message#mqtt_message.timestamp,
     Json = mochijson2:encode([
         {type, <<"published">>},
-        {client_id, From},
-		{username, Sender},
-        {topic, Topic},
+        {client_id, ClientId},
+		{username, Username},
+		{topic, Topic},
+		{msg_id, MsgId},
         {payload, Payload},
         {qos, QoS},
         {cluster_node, node()},
@@ -124,46 +120,11 @@ on_message_publish(Message, _Env) ->
     {ok, Message}.
 
 on_message_delivered(ClientId, Username, Message, _Env) ->
-    io:format("delivered to client(~s/~s): ~s~n", [Username, ClientId, emqttd_message:format(Message)]),
-	
-    Json = mochijson2:encode([
-        {type, <<"delivered">>},
-        {client_id, ClientId},
-		{username, Username},
-        {from, From},
-        {topic, Topic},
-        {payload, Payload},
-        {qos, QoS},
-        {cluster_node, node()},
-        {ts, emqttd_time:now_to_secs(Timestamp)}
-    ]),
-    ekaf:produce_async_batched(<<"tech-iot-device-gateway-2040">>, list_to_binary(Json)),
-	
+    io:format("delivered to client(~s/~s): ~s~n", [Username, ClientId, emqttd_message:format(Message)]),	
     {ok, Message}.
 
 on_message_acked(ClientId, Username, Message, _Env) ->
-    io:format("client(~s/~s) acked: ~s~n", [Username, ClientId, emqttd_message:format(Message)]),
-	
-    From = Message#mqtt_message.from,
-    Sender =  Message#mqtt_message.sender,
-    Topic = Message#mqtt_message.topic,
-    Payload = Message#mqtt_message.payload, 
-    QoS = Message#mqtt_message.qos,
-    Timestamp = Message#mqtt_message.timestamp,
-
-    Json = mochijson2:encode([
-        {type, <<"acked">>},
-        {client_id, ClientId},
-		{username, Username},
-        {from, From},
-        {topic, Topic},
-        {payload, Payload},
-        {qos, QoS},
-        {cluster_node, node()},
-        {ts, emqttd_time:now_to_secs(Timestamp)}
-    ]),
-    ekaf:produce_async_batched(<<"tech-iot-device-gateway-2040">>, list_to_binary(Json)),
-	
+    io:format("client(~s/~s) acked: ~s~n", [Username, ClientId, emqttd_message:format(Message)]),	
     {ok, Message}.
 
 %% ===================================================================
