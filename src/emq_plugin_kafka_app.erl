@@ -27,4 +27,5 @@ start(_StartType, _StartArgs) ->
     {ok, Sup}.
 
 stop(_State) ->
-    emq_plugin_kafka:unload().
+    emq_plugin_kafka:unload(),
+	ok.
