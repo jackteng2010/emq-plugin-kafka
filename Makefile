@@ -2,10 +2,10 @@ PROJECT = emq_plugin_kafka
 PROJECT_DESCRIPTION = EMQ Plugin Kafka
 PROJECT_VERSION = 2.3
 
-BUILD_DEPS = emqttd cuttlefish kafka
+BUILD_DEPS = emqttd cuttlefish ekaf
 dep_emqttd = git https://github.com/emqtt/emqttd master
 dep_cuttlefish = git https://github.com/emqtt/cuttlefish
-dep_kafka = git https://github.com/helpshift/ekaf
+dep_ekaf = git https://github.com/helpshift/ekaf master
 
 ERLC_OPTS += +debug_info
 ERLC_OPTS += +'{parse_transform, lager_transform}'
