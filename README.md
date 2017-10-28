@@ -2,7 +2,7 @@
 emq_plugin_kafka
 ===================
 
-This is a kafka plugin for the EMQ broker.
+This is a template plugin for the EMQ broker.
 
 Plugin Config
 -------------

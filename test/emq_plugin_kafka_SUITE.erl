@@ -1,5 +1,5 @@
 
--module(emqttd_plugin_kafka_SUITE).
+-module(emqttd_plugin_template_SUITE).
 
 -compile(export_all).
 
