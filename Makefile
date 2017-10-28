@@ -1,5 +1,5 @@
 PROJECT = emq_plugin_kafka
-PROJECT_DESCRIPTION = EMQ Plugin Template
+PROJECT_DESCRIPTION = EMQ Plugin Kafka
 PROJECT_VERSION = 2.3
 
 DEPS = ekaf ecpool clique
