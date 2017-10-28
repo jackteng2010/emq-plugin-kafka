@@ -59,8 +59,7 @@ on_client_disconnected(Reason, _Client = #mqtt_client{client_id = ClientId, user
     ok.
 
 on_session_created(ClientId, Username, _Env) ->
-	lager:info("11 client(~s/~s) created session.", [ClientId, Username]),
-	lager:error("22 client(~s/~s) created session.", [ClientId, Username]),
+	lager:error("client(~s/~s) created session.", [ClientId, Username]),
     Json = mochijson2:encode([{type, <<"session_created">>},
 								{clientid, ClientId},
 								{username, Username},
