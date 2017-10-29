@@ -59,7 +59,7 @@ on_client_disconnected(Reason, _Client = #mqtt_client{client_id = ClientId, user
     ok.
 
 on_session_created(ClientId, Username, _Env) ->
-	lager:error("client(~s/~s) created session.", [ClientId, Username]),
+	lager:info("client(~s/~s) created session.", [ClientId, Username]),
     Json = mochijson2:encode([{type, <<"session_created">>},
 								{clientid, ClientId},
 								{username, Username},
@@ -130,11 +130,11 @@ produce_to_kafka(Json) ->
 		_ -> io:format("111111 send to kafka success. ~n")
     catch _:Error ->
         lager:error("1111 can't send to kafka error: ~s", [Error])
-    end.
+    end,
 	
 	
 	try ekaf:produce_async(Topic, list_to_binary(Json)) of 
 		_ -> io:format("send to kafka success. ~n")
-    catch _:Error ->
-        lager:error("can't send to kafka error: ~s", [Error])
+    catch _:Error2 ->
+        lager:error("can't send to kafka error: ~s", [Error2])
     end.
