@@ -44,7 +44,7 @@ on_client_connected(ConnAck, Client = #mqtt_client{client_id  = ClientId, userna
     Json = mochijson2:encode([{type, <<"connected">>},
 								{clientid, ClientId},
 								{username, Username},
-								{ts, emqttd_time:now_secs()}]),
+								{ts, emqttd_time:now_ms()}]),
 	produce_to_kafka(Json),
     {ok, Client}.
 
@@ -54,7 +54,7 @@ on_client_disconnected(Reason, _Client = #mqtt_client{client_id = ClientId, user
 								{clientid, ClientId},
 								{username, Username},
 							  	{reason, Reason},
-								{ts, emqttd_time:now_secs()}]),
+								{ts, emqttd_time:now_ms()}]),
 	produce_to_kafka(Json),
     ok.
 
@@ -63,7 +63,7 @@ on_session_created(ClientId, Username, _Env) ->
     Json = mochijson2:encode([{type, <<"session_created">>},
 								{clientid, ClientId},
 								{username, Username},
-								{ts, emqttd_time:now_secs()}]),
+								{ts, emqttd_time:now_ms()}]),
 	produce_to_kafka(Json).
 
 on_session_terminated(ClientId, Username, Reason, _Env) ->
@@ -72,7 +72,7 @@ on_session_terminated(ClientId, Username, Reason, _Env) ->
 								{clientid, ClientId},
 								{username, Username},
 							  	{reason, Reason},
-								{ts, emqttd_time:now_secs()}]),
+								{ts, emqttd_time:now_ms()}]),
 	produce_to_kafka(Json).
     
 %% transform message and return
@@ -94,7 +94,7 @@ on_message_publish(Message = #mqtt_message{from = {ClientId, Username},
 							  	{dup, Dup},
 							  	{topic, Topic},
 							  	{payload, Payload},
-								{ts, emqttd_time:now_secs()}]),
+								{ts, emqttd_time:now_ms()}]),
 	produce_to_kafka(Json),
     {ok, Message}.
 
@@ -124,8 +124,7 @@ unload() ->
 produce_to_kafka(Json) ->
 	{ok, KafkaValue} = application:get_env(emq_plugin_kafka, kafka),
 	Topic = proplists:get_value(topic, KafkaValue),
-	io:format("produce_to_kafka topic: ~s, json: ~s .~n", [Topic, Json]),
-
+	io:format("send to kafka topic: ~s, data: ~s .~n", [Topic, Json]),
 	try ekaf:produce_async(list_to_binary(Topic), list_to_binary(Json))
     catch _:Error ->
         lager:error("can't send to kafka error: ~s", [Error])
