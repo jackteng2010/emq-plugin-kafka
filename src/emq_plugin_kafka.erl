@@ -123,11 +123,10 @@ unload() ->
 %% Internal function, send message to kafka
 produce_to_kafka(Json) ->
 	{ok, KafkaValue} = application:get_env(emq_plugin_kafka, kafka),
-	Topic2 = proplists:get_value(topic, KafkaValue),
-	io:format("=====topic: ~s, json: ~s .~n", [Topic2, Json]),
+	Topic = proplists:get_value(topic, KafkaValue),
+	lager:error("=====111.===topic: ~s, json: ~s .~n", [Topic, Json]),
 
-	try ekaf:produce_async(<<Topic2>>, list_to_binary(Json)) of 
-		_ -> io:format("send to kafka success. ~n")
-    catch _:Error2 ->
-        lager:error("can't send to kafka error: ~s", [Error2])
+	try ekaf:produce_async(Topic, list_to_binary(Json))
+    catch _:Error ->
+        lager:error(" 111 can't send to kafka error: ~s", [Error])
     end.
