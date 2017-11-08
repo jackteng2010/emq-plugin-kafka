@@ -79,21 +79,16 @@ on_session_terminated(ClientId, Username, Reason, _Env) ->
 on_message_publish(Message = #mqtt_message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
-on_message_publish(Message = #mqtt_message{from = {ClientId, Username},
-                        qos     = Qos,
-                        retain  = Retain,
-                        dup     = Dup,
-                        topic   = Topic,
-                        payload = Payload}, _Env) ->
-    lager:info("client(~s/~s) publish message to topic: ~s.", [ClientId, Username, Topic]),
+on_message_publish(Message = #mqtt_message{topic = Topic}, _Env) ->
+	{ClientId, Username} = format_from(Message#mqtt_message.from),
+	lager:info("client(~s/~s) publish message to topic: ~s.", [ClientId, Username, Topic]),
     Json = mochijson2:encode([{type, <<"publish">>},
 								{clientid, ClientId},
 								{username, Username},
-							  	{qos, Qos},
-							  	{retain, Retain},
-							  	{dup, Dup},
-							  	{topic, Topic},
-							  	{payload, Payload},
+							  	{qos, Message#mqtt_message.qos},
+							  	{retain, Message#mqtt_message.retain},
+							  	{topic, Message#mqtt_message.topic},
+							  	{payload, Message#mqtt_message.payload},
 								{ts, emqttd_time:now_ms()}]),
 	produce_to_kafka(Json),
     {ok, Message}.
@@ -129,3 +124,11 @@ produce_to_kafka(Json) ->
     catch _:Error ->
         lager:error("can't send to kafka error: ~s", [Error])
     end.
+
+format_from({ClientId, Username}) ->
+    {ClientId, Username};
+format_from(From) when is_atom(From) ->
+    {a2b(From), a2b(From)};
+format_from(_) ->
+    {<<>>, <<>>}.
+a2b(A) -> erlang:atom_to_binary(A, utf8).
